@@ -132,6 +132,10 @@ const Canvas: React.FC<CanvasProps> = ({
   const downloadImage = useCallback(() => {
     if (!stageRef.current || !image) return;
 
+    const mimeType = imageFile.type || "image/png";
+    const extension = mimeType.split("/")[1] || "png";
+    const baseName = imageFile.name.split(".").slice(0, -1).join(".");
+
     const currentScale = scale;
     const currentPosition = position;
     const currentWidth = stageRef.current.width();
@@ -145,7 +149,10 @@ const Canvas: React.FC<CanvasProps> = ({
     stageRef.current.position({ x: 0, y: 0 });
 
     setTimeout(() => {
-      const uri = stageRef.current.toDataURL({ pixelRatio: 3 });
+      const uri = stageRef.current.toDataURL({
+        pixelRatio: 3,
+        mimeType,
+      });
 
       stageRef.current.scale({ x: currentScale, y: currentScale });
       stageRef.current.position(currentPosition);
@@ -155,13 +162,13 @@ const Canvas: React.FC<CanvasProps> = ({
       });
 
       const link = document.createElement("a");
-      link.download = "canvas-image.png";
+      link.download = `${baseName}.${extension}`;
       link.href = uri;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }, 50);
-  }, [image, position, scale]);
+  }, [image, position, scale, imageFile, stageRef]);
 
   useEffect(() => {
     if (download) {
