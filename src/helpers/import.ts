@@ -50,8 +50,8 @@ async function processVersion1_0_0(zipContent: JSZip): Promise<{ data: Data[], p
 
     if (extension === "json") {
       const imagePath = folderPath
-        ? `${folderPath}/${baseName}.png`
-        : `${baseName}.png`;
+        ? `${folderPath}/${baseName}.jpg`
+        : `${baseName}.jpg`;
       if (zipContent.files[imagePath]) {
         const fullPath = folderPath ? `${folderPath}/${baseName}` : baseName;
         fileMap.set(fullPath, {
@@ -82,7 +82,7 @@ async function processVersion1_0_0(zipContent: JSZip): Promise<{ data: Data[], p
         [imageBlob],
         imagePath.split("/").pop() || "",
         {
-          type: "image/png",
+          type: "image/jpeg",
         }
       );
       // Add the webkitRelativePath manually
