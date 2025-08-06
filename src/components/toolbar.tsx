@@ -14,7 +14,7 @@ interface ToolbarProps {
 
 const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
   ({ className, setTool, tools }, ref) => {
-    const [isOpen, setIsOpen] = useState<string | null>(null);
+    const [isOpen, setIsOpen] = useState<string | null>("file"); // Set to "file" instead of null
     const { lineColor, setLineColor } = useAppStore();
 
     return (
@@ -25,7 +25,9 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
               <ToolbarButton
                 key={mainTool.codeName}
                 tool={mainTool}
-                onClickOpen={setIsOpen}
+                onClickOpen={(codeName) => {
+                  setIsOpen(isOpen === codeName ? null : codeName);
+                }}
                 onClickSet={setTool}
                 isOpen={isOpen === mainTool.codeName}
               />

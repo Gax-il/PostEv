@@ -366,7 +366,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     URL.revokeObjectURL(url);
   },
   handleZipImport: async (file) => {
-    if (file && file.type === "application/zip") {
+    if (file && (file.type === "application/zip" || file.type === "application/x-zip-compressed")) {
       const { data: newData, photoAngleValues: importedAngleValues } =
         await importPhotosWithJson(file);
       set({
@@ -374,6 +374,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         view: { tool: "drag", index: 0 },
         photoAngleValues: importedAngleValues,
       });
+    }
+    else {
+      console.error("Invalid file type. Please upload a zip file.");
     }
   },
   handleZipDownload: async (stageRef) => {
