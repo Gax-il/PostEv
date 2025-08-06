@@ -26,6 +26,7 @@ interface AppState {
   zipDownload: boolean;
   zipProgress: number;
   lineColor: string;
+  importedZipName?: string; // Add this new property
   setToolbarHeight: (height: number) => void;
   setTool: (tool: string) => void;
   changeTool: (tool: string) => void;
@@ -64,7 +65,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setView: (view) => set({ view }),
   setDownload: (value) => set({ download: value }),
   setLineColor: (color) => set({ lineColor: color }),
-  changeTool: (tool) => {
+  changeTool: async (tool) => {
     const { data, view } = get();
     if (tool === "downloadImage") {
       set({ download: true });
@@ -91,9 +92,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ view: { tool, index: newIndex } });
       get().handleDisableFilesTools(newIndex);
     } else if (tool === "export") {
-      const { data, photoAngleValues } = get();
+      const { data, photoAngleValues, importedZipName } = get();
       if (data === null) return;
-      exportPhotosWithJson(data, photoAngleValues);
+      await exportPhotosWithJson(data, photoAngleValues, importedZipName || "exported_files");
     } else if (tool === "exportAngles") {
       get().exportAnglesToCSV();
     } else if (tool === "import") {
@@ -369,10 +370,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (file && (file.type === "application/zip" || file.type === "application/x-zip-compressed")) {
       const { data: newData, photoAngleValues: importedAngleValues } =
         await importPhotosWithJson(file);
+      
+      // Get filename without extension
+      const importedZipName = file.name.replace(/\.zip$/i, '');
+      
       set({
         data: newData,
         view: { tool: "drag", index: 0 },
         photoAngleValues: importedAngleValues,
+        importedZipName: importedZipName, // Store the ZIP name
       });
     }
     else {

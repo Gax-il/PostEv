@@ -5,7 +5,8 @@ const EXPORT_VERSION = "1.0.0";
 
 export const exportPhotosWithJson = async (
   data: Data[],
-  photoAngleValues: any[] = []
+  photoAngleValues: any[] = [],
+  zipName?: string // Optional zipName parameter
 ) => {
   const zip = new JSZip();
 
@@ -62,7 +63,7 @@ export const exportPhotosWithJson = async (
   const zipUrl = URL.createObjectURL(zipBlob);
   const zipLink = document.createElement("a");
   zipLink.href = zipUrl;
-  zipLink.download = "exported_files.zip";
+  zipLink.download = `${zipName || "exported_files"}.zip`; // Use zipName if provided
   document.body.appendChild(zipLink);
   zipLink.click();
   document.body.removeChild(zipLink);
