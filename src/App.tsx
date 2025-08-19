@@ -139,7 +139,7 @@ function App() {
       >
         <input
           type="file"
-          accept=".zip"
+          accept="application/zip,application/x-zip-compressed,.zip"
           id="import-input"
           style={{ display: "none" }}
           onChange={handleFileInput}
