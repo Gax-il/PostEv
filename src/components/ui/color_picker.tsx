@@ -39,8 +39,7 @@ const ColorPicker = forwardRef<
           style={{
             backgroundColor: parsedValue,
           }}
-          variant="outline"
-        >
+          variant="outline">
           <div />
         </Button>
       </PopoverTrigger>

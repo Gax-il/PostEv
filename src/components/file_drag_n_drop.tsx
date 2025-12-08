@@ -37,16 +37,14 @@ const FileDragNDrop = ({ setFiles, disabled, open }: FileDragNDropProps) => {
       {!disabled && !open && (
         <div
           {...getRootProps()}
-          className="w-screen-dvw h-screen-dvw top-0 left-0 right-0 bottom-0 absolute"
-        >
-          <input {...getInputProps()} className="w-full h-full" />
-          <div className="w-full h-full flex items-center justify-center">
+          className="h-screen-dvw absolute bottom-0 left-0 right-0 top-0 w-screen-dvw">
+          <input {...getInputProps()} className="h-full w-full" />
+          <div className="flex h-full w-full items-center justify-center">
             <div
               className={cn(
-                "rounded-2xl p-10 bg-card shadow-xl flex items-center justify-center flex-col ease-in-out duration-200 transition-all",
+                "flex flex-col items-center justify-center rounded-2xl bg-card p-10 shadow-xl transition-all duration-200 ease-in-out",
                 isDragActive ? "scale-100" : "scale-0"
-              )}
-            >
+              )}>
               <UploadIcon width={150} height={150} />
               <p>We are holding the photos</p>
               <p className="text-italic">You can drop them here</p>

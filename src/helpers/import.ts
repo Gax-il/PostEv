@@ -1,16 +1,17 @@
 import { Data, PhotoAngleValues } from "@/types";
 import JSZip from "jszip";
 
-export const importPhotosWithJson = async (zipFile: File): Promise<{ data: Data[], photoAngleValues: PhotoAngleValues[] }> => {
+export const importPhotosWithJson = async (
+  zipFile: File
+): Promise<{ data: Data[]; photoAngleValues: PhotoAngleValues[] }> => {
   const zip = new JSZip();
   const zipContent = await zip.loadAsync(zipFile);
 
   let version = "1.0.0";
   if (zipContent.files["appinfo.json"]) {
     try {
-      const appInfoJson = await zipContent.files["appinfo.json"].async(
-        "string"
-      );
+      const appInfoJson =
+        await zipContent.files["appinfo.json"].async("string");
       const appInfo = JSON.parse(appInfoJson);
       version = appInfo.version;
     } catch (error) {
@@ -27,7 +28,9 @@ export const importPhotosWithJson = async (zipFile: File): Promise<{ data: Data[
   }
 };
 
-async function processVersion1_0_0(zipContent: JSZip): Promise<{ data: Data[], photoAngleValues: PhotoAngleValues[] }> {
+async function processVersion1_0_0(
+  zipContent: JSZip
+): Promise<{ data: Data[]; photoAngleValues: PhotoAngleValues[] }> {
   const files: Data[] = [];
   const photoAngleValues: PhotoAngleValues[] = [];
   const processedFiles = new Set<string>();
@@ -102,7 +105,7 @@ async function processVersion1_0_0(zipContent: JSZip): Promise<{ data: Data[], p
       // Add photo angle values
       photoAngleValues.push({
         name: imageFile.name,
-        angles: parsedData.angleValues || []
+        angles: parsedData.angleValues || [],
       });
 
       processedFiles.add(fullPath);

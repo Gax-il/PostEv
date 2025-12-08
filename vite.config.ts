@@ -4,8 +4,8 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-    build: {
-    sourcemap: 'inline', // Use 'inline' for the best debugging experience
+  build: {
+    sourcemap: "inline", // Use 'inline' for the best debugging experience
   },
   resolve: {
     alias: {

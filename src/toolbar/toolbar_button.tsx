@@ -25,8 +25,7 @@ const ToolbarButton = ({
             onClickOpen(tool.codeName);
           }
         }}
-        title={tool.tooltip}
-      >
+        title={tool.tooltip}>
         {typeof tool.image === "string" ? (
           <img
             src={`/assets/${tool.image}`}
@@ -46,20 +45,18 @@ const ToolbarButton = ({
           style={{
             maxWidth: isOpen ? "1000px" : "0",
             opacity: isOpen ? 1 : 0,
-          }}
-        >
+          }}>
           {tool.children.map((childTool) => (
             <button
               key={childTool.codeName}
               className={cn(
                 "text-nowrap",
-                childTool.disabled && "opacity-50 cursor-not-allowed"
+                childTool.disabled && "cursor-not-allowed opacity-50"
               )}
               onClick={() => {
                 childTool.disabled ? null : onClickSet(childTool.codeName);
               }}
-              title={childTool.tooltip}
-            >
+              title={childTool.tooltip}>
               {typeof childTool.image === "string" ? (
                 <img
                   src={`/assets/${childTool.image}`}

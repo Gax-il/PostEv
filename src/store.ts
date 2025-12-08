@@ -94,7 +94,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     } else if (tool === "export") {
       const { data, photoAngleValues, importedZipName } = get();
       if (data === null) return;
-      await exportPhotosWithJson(data, photoAngleValues, importedZipName || "exported_files");
+      await exportPhotosWithJson(
+        data,
+        photoAngleValues,
+        importedZipName || "exported_files"
+      );
     } else if (tool === "exportAngles") {
       get().exportAnglesToCSV();
     } else if (tool === "import") {
@@ -367,21 +371,24 @@ export const useAppStore = create<AppState>((set, get) => ({
     URL.revokeObjectURL(url);
   },
   handleZipImport: async (file) => {
-    if (file && (file.type === "application/zip" || file.type === "application/x-zip-compressed")) {
+    if (
+      file &&
+      (file.type === "application/zip" ||
+        file.type === "application/x-zip-compressed")
+    ) {
       const { data: newData, photoAngleValues: importedAngleValues } =
         await importPhotosWithJson(file);
-      
+
       // Get filename without extension
-      const importedZipName = file.name.replace(/\.zip$/i, '');
-      
+      const importedZipName = file.name.replace(/\.zip$/i, "");
+
       set({
         data: newData,
         view: { tool: "drag", index: 0 },
         photoAngleValues: importedAngleValues,
         importedZipName: importedZipName, // Store the ZIP name
       });
-    }
-    else {
+    } else {
       console.error("Invalid file type. Please upload a zip file.");
     }
   },

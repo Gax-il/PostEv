@@ -1,6 +1,8 @@
 import { useRef, useEffect, type MutableRefObject, type Ref } from "react";
 
-export function useForwardedRef<T>(forwardedRef: Ref<T>): MutableRefObject<T | null> {
+export function useForwardedRef<T>(
+  forwardedRef: Ref<T>
+): MutableRefObject<T | null> {
   const innerRef = useRef<T | null>(null);
 
   useEffect(() => {
@@ -15,4 +17,4 @@ export function useForwardedRef<T>(forwardedRef: Ref<T>): MutableRefObject<T | n
   });
 
   return innerRef;
-} 
+}

@@ -18,9 +18,9 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
     const { lineColor, setLineColor } = useAppStore();
 
     return (
-      <div ref={ref} className={cn("flex justify-center ", className)}>
-        <div className="p-2 bg-card shadow-xl ease-in-out duration-200 transition-all overflow-hidden w-screen-dvw">
-          <div className="flex items-center justify-center min-w-max gap-4">
+      <div ref={ref} className={cn("flex justify-center", className)}>
+        <div className="w-screen-dvw overflow-hidden bg-card p-2 shadow-xl transition-all duration-200 ease-in-out">
+          <div className="flex min-w-max items-center justify-center gap-4">
             {tools.map((mainTool) => (
               <ToolbarButton
                 key={mainTool.codeName}
@@ -32,11 +32,11 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
                 isOpen={isOpen === mainTool.codeName}
               />
             ))}
-            <div className="flex items-center ml-4">
+            <div className="ml-4 flex items-center">
               <ColorPicker
                 value={lineColor}
                 onChange={setLineColor}
-                className="w-8 h-8"
+                className="h-8 w-8"
               />
             </div>
           </div>

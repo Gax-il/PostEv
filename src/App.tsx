@@ -122,12 +122,12 @@ function App() {
   };
 
   return (
-    <div className="w-screen-dvw h-screen-dvh relative">
+    <div className="relative h-screen-dvh w-screen-dvw">
       <Toolbar
         setTool={changeTool}
         tool={tool}
         ref={toolbarRef}
-        className="fixed top-0 w-full z-20"
+        className="fixed top-0 z-20 w-full"
         tools={tools}
       />
       {data === null && <NoFiles />}
@@ -135,8 +135,7 @@ function App() {
         style={{
           marginTop: toolbarHeight,
           height: `calc(100vh - ${toolbarHeight}px)`,
-        }}
-      >
+        }}>
         <input
           type="file"
           accept="application/zip,application/x-zip-compressed,.zip"
@@ -150,8 +149,7 @@ function App() {
               style={{
                 marginTop: toolbarHeight,
               }}
-              className="pr-2 p-1/2 text-right"
-            >
+              className="p-1/2 pr-2 text-right">
               <div>
                 <span className="font-bold">Úhel:</span>{" "}
                 {data[view.index].lastSelectedAngleTool || "Žádný"}
@@ -185,12 +183,12 @@ function App() {
         />
       </div>
       {zipDownload && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg">
-            <h3 className="text-lg font-bold mb-2">Připravuji ZIP soubor...</h3>
-            <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="rounded-lg bg-white p-4">
+            <h3 className="mb-2 text-lg font-bold">Připravuji ZIP soubor...</h3>
+            <div className="h-2 w-48 overflow-hidden rounded-full bg-gray-200">
               <div
-                className="w-full h-full bg-blue-500 transition-all duration-300"
+                className="h-full w-full bg-blue-500 transition-all duration-300"
                 style={{ width: `${zipProgress}%` }}
               />
             </div>

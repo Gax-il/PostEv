@@ -241,8 +241,7 @@ const Canvas: React.FC<CanvasProps> = ({
       x={position.x}
       y={position.y}
       onWheel={handleWheel}
-      perfectDrawEnabled={false}
-    >
+      perfectDrawEnabled={false}>
       <Layer>
         <KonvaImage
           image={image}
