@@ -145,20 +145,6 @@ function App() {
         />
         {data !== null && data[view.index] && (
           <>
-            <div
-              style={{
-                marginTop: toolbarHeight,
-              }}
-              className="p-1/2 pr-2 text-right">
-              <div>
-                <span className="font-bold">Úhel:</span>{" "}
-                {data[view.index].lastSelectedAngleTool || "Žádný"}
-              </div>
-              <div>
-                {view.index + 1}/
-                <span className="font-bold">{data.length}</span>
-              </div>
-            </div>
             <Canvas
               tool={tool}
               imageFile={data[view.index].file}
