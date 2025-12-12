@@ -9,7 +9,7 @@ export const anglesData: Angles = {
     { x: null, y: null, info: "Midpoint feet" },
     { x: null, y: null, info: "Symphysis" },
     { x: null, y: null, info: "Jugulum" },
-    { x: null, y: null, info: "C1" },
+    { x: null, y: null, info: "C7" },
     { x: null, y: null, info: "L5" },
     { x: null, y: null, info: "MA" },
     { x: null, y: null, info: "C7" },

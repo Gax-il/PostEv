@@ -83,10 +83,10 @@ const Canvas: React.FC<CanvasProps> = ({
     let newWidth, newHeight, newScale;
 
     if (adjustedWidth / adjustedHeight > imageAspect) {
-      newHeight = Math.min(image.height, adjustedHeight);
+      newHeight = adjustedHeight;
       newWidth = newHeight * imageAspect;
     } else {
-      newWidth = Math.min(image.width, adjustedWidth);
+      newWidth = adjustedWidth;
       newHeight = newWidth / imageAspect;
     }
 
@@ -177,12 +177,6 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   }, [download, setDownload, downloadImage]);
 
-  const childScale = useMemo(() => {
-    if (!image || !image.width) return 3000;
-
-    return scale <= 1 ? 3000 : (10 ** 7 / image.width / 2) * scale * 100;
-  }, [image, scale]);
-
   const handleMouseEnter = useCallback(
     (e: any) => {
       if (tool !== "drag") return;
@@ -213,9 +207,9 @@ const Canvas: React.FC<CanvasProps> = ({
         photoMax={{ x: 100, y: 100 }}
         setPoints={throttledSetPoints}
         tool={tool}
-        scale={childScale}
         photoSize={photoSize}
         handlePhotoAngleValues={handlePhotoAngleValues}
+        stageScale={scale}
       />
     );
   }, [
@@ -225,7 +219,7 @@ const Canvas: React.FC<CanvasProps> = ({
     curIndex,
     throttledSetPoints,
     tool,
-    childScale,
+    scale,
     photoSize,
     handlePhotoAngleValues,
   ]);
@@ -241,8 +235,7 @@ const Canvas: React.FC<CanvasProps> = ({
       x={position.x}
       y={position.y}
       onWheel={handleWheel}
-      perfectDrawEnabled={false}
-    >
+      perfectDrawEnabled={false}>
       <Layer>
         <KonvaImage
           image={image}

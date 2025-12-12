@@ -86,23 +86,28 @@ Each function is self-explanatory and includes tooltips for extra guidance.
 
 ## How to Use PostEv
 
-1. **Loading a Photo**  
-   - Click anywhere on photo area when there are no photos loaded, or drag'n'drop the file to the page. 
+1. **Loading a Photo**
 
-2. **Navigating Through Photos**  
+   - Click anywhere on photo area when there are no photos loaded, or drag'n'drop the file to the page.
+
+2. **Navigating Through Photos**
+
    - Use **File > Previous** and **File > Next** to browse through the collection of patient images. Arrow keys on keyboard can be used too
 
-3. **Measuring Angles**  
+3. **Measuring Angles**
+
    - Select one of the angle measurement tools (**Front**, **Side**, or **Back**) from the top menu.
    - If available, choose the corresponding sub-tool (e.g., **Pisa**, **Total CC**, **Upper CC**) to further refine the measurement.
    - Drag points to their coresponding places
 
-4. **Editing and Adjusting the Image**  
+4. **Editing and Adjusting the Image**
+
    - Use the **Drag** tool to reposition the image for optimal alignment before measurement.
    - Click the **Flip Photo** button if a vertical inversion is needed for your analysis.
 
-5. **File Management**  
+5. **File Management**
    - After measuring and analyzing the patient’s posture, use the **File** operations to export, download, or clear files as required.
+
 ---
 
 ## Notes

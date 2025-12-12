@@ -22,6 +22,8 @@ export interface Tool {
   disabled?: boolean;
   angle?: boolean;
   tooltip?: string;
+  hideTool?: boolean;
+  groupToggle?: boolean;
 }
 
 export interface ChildTool {
@@ -35,10 +37,23 @@ export interface ChildTool {
 
 const tools: Tool[] = [
   {
-    name: "Drag",
-    codeName: "drag",
-    image: IconHandStop,
-    tooltip: "Drag",
+    name: "Photo manipulation",
+    codeName: "photomanipulation",
+    hideTool: true,
+    children: [
+      {
+        name: "Drag",
+        codeName: "drag",
+        image: IconHandStop,
+        tooltip: "Drag",
+      },
+      {
+        name: "Flip Photo",
+        image: IconFlipVertical,
+        codeName: "flip",
+        tooltip: "Flip photo",
+      },
+    ],
   },
   {
     name: "Front",
@@ -51,6 +66,7 @@ const tools: Tool[] = [
         codeName: "pisa",
       },
     ],
+    groupToggle: true,
   },
   {
     name: "Side",
@@ -68,6 +84,7 @@ const tools: Tool[] = [
         codeName: "upperCC",
       },
     ],
+    groupToggle: true,
   },
   {
     name: "Back",
@@ -80,11 +97,12 @@ const tools: Tool[] = [
         codeName: "back",
       },
     ],
+    groupToggle: true,
   },
   {
-    name: "File",
-    codeName: "file",
-    tooltip: "File",
+    name: "PhotoSwitch",
+    codeName: "photoswitch",
+    hideTool: true,
     children: [
       {
         name: "Previous",
@@ -98,6 +116,13 @@ const tools: Tool[] = [
         codeName: "next",
         tooltip: "Next",
       },
+    ],
+  },
+  {
+    name: "ImportExport",
+    codeName: "importexport",
+    hideTool: true,
+    children: [
       {
         name: "Export",
         image: IconDownload,
@@ -110,17 +135,18 @@ const tools: Tool[] = [
         codeName: "import",
         tooltip: "Import",
       },
+    ],
+  },
+  {
+    name: "LoadedFilemanagment",
+    codeName: "lfmanagment",
+    hideTool: true,
+    children: [
       {
         name: "Download Image",
         image: IconImageInPicture,
         codeName: "downloadImage",
         tooltip: "Download image with angles",
-      },
-      {
-        name: "Remove Files",
-        image: IconTrash,
-        codeName: "removeFiles",
-        tooltip: "Remove files",
       },
       {
         name: "Download Images",
@@ -137,10 +163,10 @@ const tools: Tool[] = [
     ],
   },
   {
-    name: "Flip Photo",
-    image: IconFlipVertical,
-    codeName: "flip",
-    tooltip: "Flip photo",
+    name: "Remove Files",
+    image: IconTrash,
+    codeName: "removeFiles",
+    tooltip: "Remove files",
   },
 ];
 

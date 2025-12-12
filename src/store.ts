@@ -26,6 +26,7 @@ interface AppState {
   zipDownload: boolean;
   zipProgress: number;
   lineColor: string;
+  importedZipName?: string;
   setToolbarHeight: (height: number) => void;
   setTool: (tool: string) => void;
   changeTool: (tool: string) => void;
@@ -44,9 +45,39 @@ interface AppState {
   setLineColor: (color: string) => void;
 }
 
+const initialTools = toolsData.map((tool) => {
+  if (tool.codeName === "flip") {
+    return { ...tool, disabled: true };
+  }
+
+  if (tool.children) {
+    const newChildren = tool.children.map((childTool) => {
+      const toolsToDisable = [
+        "previous",
+        "next",
+        "export",
+        "downloadImage",
+        "removeFiles",
+        "downloadImages",
+        "exportAngles",
+      ];
+      
+      if (toolsToDisable.includes(childTool.codeName)) {
+        return { ...childTool, disabled: true };
+      }
+      return childTool;
+    });
+    return { ...tool, children: newChildren };
+  }
+
+  return tool;
+}) as Tool[];
+
 export const useAppStore = create<AppState>((set, get) => ({
   tool: "drag",
-  tools: toolsData,
+  
+  tools: initialTools,
+  
   toolbarHeight: 0,
   data: null,
   view: { tool: "drag", index: 0 },
@@ -54,7 +85,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   download: false,
   zipDownload: false,
   zipProgress: 0,
-  lineColor: "#fff",
+  lineColor: "#88fa2a",
   setToolbarHeight: (height) => {
     if (get().toolbarHeight !== height) {
       set({ toolbarHeight: height });
@@ -64,7 +95,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setView: (view) => set({ view }),
   setDownload: (value) => set({ download: value }),
   setLineColor: (color) => set({ lineColor: color }),
-  changeTool: (tool) => {
+  changeTool: async (tool) => {
     const { data, view } = get();
     if (tool === "downloadImage") {
       set({ download: true });
@@ -91,9 +122,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ view: { tool, index: newIndex } });
       get().handleDisableFilesTools(newIndex);
     } else if (tool === "export") {
-      const { data, photoAngleValues } = get();
+      const { data, photoAngleValues, importedZipName } = get();
       if (data === null) return;
-      exportPhotosWithJson(data, photoAngleValues);
+      await exportPhotosWithJson(
+        data,
+        photoAngleValues,
+        importedZipName || "exported_files"
+      );
     } else if (tool === "exportAngles") {
       get().exportAnglesToCSV();
     } else if (tool === "import") {
@@ -106,6 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         view: { tool: "drag", index: 0 },
         tool: "drag",
       });
+      get().handleDisableFilesTools(0);
     } else if (tool === "flip") {
       const { data, view } = get();
       if (!Array.isArray(data) || !data) return;
@@ -151,52 +187,43 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   handleDisableFilesTools: (index) => {
     const { tools, data, photoAngleValues } = get();
+    const noData = !data || data.length === 0;
+
     const newTools = tools.map((tool) => {
+      if (tool.codeName === "flip") {
+        return { ...tool, disabled: noData };
+      }
+
       if (tool.children) {
         const newChildren = tool.children.map((childTool) => {
           switch (childTool.codeName) {
             case "previous":
               return {
                 ...childTool,
-                disabled: index === 0 && childTool.codeName === "previous",
+                disabled: noData || index === 0,
               };
             case "next":
               return {
                 ...childTool,
-                disabled:
-                  (data &&
-                    index === data.length - 1 &&
-                    childTool.codeName === "next") ||
-                  !data ||
-                  (data && data.length === 0),
+                disabled: noData || index === (data ? data.length - 1 : 0),
               };
             case "removeFiles":
-              return {
-                ...childTool,
-                disabled: !data || (data && data.length === 0),
-              };
             case "export":
+            case "downloadImage":
+            case "downloadImages":
               return {
                 ...childTool,
-                disabled: !data || (data && data.length === 0),
+                disabled: noData,
               };
             case "import":
               return {
                 ...childTool,
-                disabled: data && data.length > 0,
-              };
-            case "downloadImage":
-              return {
-                ...childTool,
-                disabled: !data || (data && data.length === 0),
+                disabled: false,
               };
             case "exportAngles":
               return {
                 ...childTool,
-                disabled:
-                  !data ||
-                  (data && data.length === 0) ||
-                  photoAngleValues.length === 0,
+                disabled: noData || photoAngleValues.length === 0,
               };
             default:
               return childTool;
@@ -239,6 +266,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       data: newData,
       view: { tool: "drag", index: 0 },
     });
+    get().handleDisableFilesTools(0);
   },
   setPoints: (points) => {
     const { data, view } = get();
@@ -366,14 +394,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     URL.revokeObjectURL(url);
   },
   handleZipImport: async (file) => {
-    if (file && file.type === "application/zip") {
-      const { data: newData, photoAngleValues: importedAngleValues } =
-        await importPhotosWithJson(file);
-      set({
-        data: newData,
-        view: { tool: "drag", index: 0 },
-        photoAngleValues: importedAngleValues,
-      });
+    const isZip = 
+      file.type === "application/zip" || 
+      file.type === "application/x-zip-compressed" || 
+      file.name.toLowerCase().endsWith(".zip");
+
+    if (file && isZip) {
+      try {
+        const { data: newData, photoAngleValues: importedAngleValues } =
+          await importPhotosWithJson(file);
+        
+        const importedZipName = file.name.replace(/\.zip$/i, '');
+        
+        set({
+          data: newData,
+          view: { tool: "drag", index: 0 },
+          photoAngleValues: importedAngleValues,
+          importedZipName: importedZipName,
+        });
+        get().handleDisableFilesTools(0);
+      } catch (e) {
+        console.error("Import failed", e);
+      }
+    } else {
+      console.error("Invalid file type. Please upload a zip file.");
     }
   },
   handleZipDownload: async (stageRef) => {

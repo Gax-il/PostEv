@@ -15,10 +15,16 @@ interface PointProps {
   disabled: boolean;
   info?: string;
   setFunction: (newPoint: Point) => void;
-  scale: number;
+  stageScale: number;
 }
 
-const Point = ({ point, disabled, info, setFunction, scale }: PointProps) => {
+const Point = ({
+  point,
+  disabled,
+  info,
+  setFunction,
+  stageScale,
+}: PointProps) => {
   const textRef = useRef<any>(null);
   const [isHover, setIsHover] = useState<boolean>(false);
   const { lineColor } = useAppStore();
@@ -28,13 +34,17 @@ const Point = ({ point, disabled, info, setFunction, scale }: PointProps) => {
   }, []);
 
   const sizing = useMemo(() => {
-    const pointSize = scale * 5;
+    const basePointSize = 5;
+    const pointSize = (basePointSize * 2.3) / Math.max(stageScale, 0.001);
+    const baseStrokeWidth = 10;
+    const strokeWidth = baseStrokeWidth / Math.max(stageScale, 0.001) / 5;
     return {
       pointSize,
-      textOffset: pointSize * 1.4,
-      fontSize: pointSize * 1.6,
+      textOffset: pointSize * 1.5,
+      fontSize: pointSize * 1.5,
+      strokeWidth,
     };
-  }, [scale]);
+  }, [stageScale]);
 
   useEffect(() => {
     if (textRef.current && !isSafari) {
@@ -144,7 +154,7 @@ const Point = ({ point, disabled, info, setFunction, scale }: PointProps) => {
         radius={sizing.pointSize}
         stroke={lineColor}
         opacity={1}
-        strokeWidth={10}
+        strokeWidth={sizing.strokeWidth}
         onDragMove={handleDragMove}
         draggable={!disabled}
         onMouseOver={handleMouseOver}
@@ -161,7 +171,7 @@ const Point = ({ point, disabled, info, setFunction, scale }: PointProps) => {
 export default React.memo(Point, (prevProps, nextProps) => {
   return (
     prevProps.disabled === nextProps.disabled &&
-    prevProps.scale === nextProps.scale &&
+    prevProps.stageScale === nextProps.stageScale &&
     prevProps.info === nextProps.info &&
     prevProps.point.x === nextProps.point.x &&
     prevProps.point.y === nextProps.point.y
