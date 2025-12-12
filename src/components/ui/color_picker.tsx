@@ -22,7 +22,7 @@ const ColorPicker = forwardRef<
   const [open, setOpen] = useState(false);
 
   const parsedValue = useMemo(() => {
-    return value || "#FFFFFF";
+    return value || "#008000";
   }, [value]);
 
   return (
