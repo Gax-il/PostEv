@@ -33,8 +33,8 @@ interface AngleProps {
     width: number;
     height: number;
   };
-  scale: number;
   handlePhotoAngleValues: (calculateAngle: CalculatedAngle) => void;
+  stageScale: number;
 }
 
 const Angle = ({
@@ -44,8 +44,8 @@ const Angle = ({
   curIndex,
   tool,
   photoSize,
-  scale,
   handlePhotoAngleValues,
+  stageScale,
 }: AngleProps) => {
   const { lineColor } = useAppStore();
   const [linePoints, setLinePoints] = useState<Line[]>([]);
@@ -122,8 +122,6 @@ const Angle = ({
     }, 16),
     []
   );
-
-  const innerScale = useMemo(() => scale * 0.002, [scale]);
 
   const findIntersection = useCallback((line1: Line, line2: Line) => {
     if (
@@ -251,6 +249,8 @@ const Angle = ({
     if (!angle || !angle.Connections || !localPoints.length) return;
 
     const newLinePoints: Line[] = [];
+    const largerImageDimension = Math.max(photoSize.width, photoSize.height);
+    const baseOverlapSize = largerImageDimension / 300;
 
     angle.Connections.forEach((connection) => {
       const firstPoint = localPoints.find(
@@ -284,7 +284,7 @@ const Angle = ({
           const startPoint = getPointWithLongerLine(
             firstPoint.point,
             secondPoint.point,
-            ((connection.startOverlap * 1) / scale) * 20000
+            connection.startOverlap * 1 * baseOverlapSize
           );
 
           if (
@@ -304,7 +304,7 @@ const Angle = ({
           const endPoint = getPointWithLongerLine(
             secondPoint.point,
             firstPoint.point,
-            ((connection.endOverlap * 1) / scale) * 20000
+            connection.endOverlap * 1 * baseOverlapSize
           );
 
           if (
@@ -321,13 +321,13 @@ const Angle = ({
           const startPoint = getPointWithLongerLine(
             firstPoint.point,
             secondPoint.point,
-            ((connection.startOverlap * 1) / scale) * 20000
+            connection.startOverlap * 1 * baseOverlapSize
           );
 
           const endPoint = getPointWithLongerLine(
             secondPoint.point,
             firstPoint.point,
-            ((connection.endOverlap * 1) / scale) * 20000
+            connection.endOverlap * 1 * baseOverlapSize
           );
 
           if (
@@ -352,7 +352,7 @@ const Angle = ({
     if (JSON.stringify(newLinePoints) !== JSON.stringify(linePoints)) {
       setLinePoints(newLinePoints);
     }
-  }, [angle, localPoints]);
+  }, [angle, localPoints, photoSize.width, photoSize.height]);
 
   useEffect(() => {
     if (localPoints.length > 0) {
@@ -381,25 +381,30 @@ const Angle = ({
       <Connection
         key={`connection-${index}`}
         connection={linePoint}
-        scale={innerScale}
+        stageScale={stageScale}
       />
     ));
-  }, [linePoints, innerScale]);
+  }, [linePoints, stageScale]);
 
   const angleTexts = useMemo(() => {
+    // Text size should be inversely proportional to stage scale
+    const baseFontSize = 20;
+    const fontSize = baseFontSize / Math.max(stageScale, 0.001);
+    const offset = fontSize * 0.5;
+
     return calculateAnglesArray.map((calculatedAngle, index) => (
       <Text
         key={`angle-${index}`}
         text={`${calculatedAngle.angle.toFixed(1)}°`}
-        x={calculatedAngle.x + 10 * innerScale}
-        y={calculatedAngle.y - 10 * innerScale}
+        x={calculatedAngle.x + offset}
+        y={calculatedAngle.y - offset}
         fill={lineColor}
-        fontSize={20 * innerScale}
+        fontSize={fontSize}
         shadowBlur={10}
         perfectDrawEnabled={false}
       />
     ));
-  }, [calculateAnglesArray, innerScale, lineColor]);
+  }, [calculateAnglesArray, stageScale, lineColor]);
 
   const pointComponents = useMemo(() => {
     return localPoints.map((point) => (
@@ -409,10 +414,10 @@ const Angle = ({
         disabled={false}
         info={point.point.info || ""}
         setFunction={(newPoint) => setPoint(point.index, newPoint)}
-        scale={innerScale}
+        stageScale={stageScale}
       />
     ));
-  }, [localPoints, innerScale, setPoint]);
+  }, [localPoints, stageScale, setPoint]);
 
   return (
     <>

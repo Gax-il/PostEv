@@ -5,10 +5,10 @@ import { useAppStore } from "@/store";
 
 interface ConnectionProps {
   connection: LineType;
-  scale: number;
+  stageScale: number;
 }
 
-const Connection = ({ connection, scale }: ConnectionProps) => {
+const Connection = ({ connection, stageScale }: ConnectionProps) => {
   const { start, end } = connection;
   const { lineColor } = useAppStore();
 
@@ -22,11 +22,14 @@ const Connection = ({ connection, scale }: ConnectionProps) => {
       return null;
     }
 
+    const baseStrokeWidth = 2;
+    const strokeWidth = baseStrokeWidth / Math.max(stageScale, 0.001);
+
     return {
       points: [start.x, start.y, end.x, end.y],
-      strokeWidth: scale * 2,
+      strokeWidth,
     };
-  }, [start?.x, start?.y, end?.x, end?.y, scale]);
+  }, [start?.x, start?.y, end?.x, end?.y, stageScale]);
 
   if (!lineData) return null;
 
