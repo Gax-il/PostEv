@@ -171,7 +171,7 @@ function App() {
       {zipDownload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="rounded-lg bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Připravuji ZIP soubor...</h3>
+            <h3 className="mb-2 text-lg font-bold">Preparing ZIP file...</h3>
             <div className="h-2 w-48 overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full w-full bg-blue-500 transition-all duration-300"

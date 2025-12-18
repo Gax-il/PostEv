@@ -140,7 +140,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       const exportName =
         importedZipName && importedZipName.length > 0
-          ? importedZipName + "_new"
+          ? importedZipName 
           : getRootFolderNameFromData(data) || "exported_files";
 
       await exportPhotosWithJson(data, photoAngleValues, exportName);
@@ -191,7 +191,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                 const { data, view } = get();
                 if (!data) return;
                 const newData = [...data];
-                newData[view.index].lastSelectedAngleTool = childTool.codeName;
+                newData[view.index].lastSelectedAngleTool =
+                  childTool.codeName;
                 newData[view.index].usedAngle[
                   childTool.codeName as keyof UsedAngle
                 ] = true;
@@ -269,7 +270,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (newFiles.length > 0 && "webkitRelativePath" in newFiles[0]) {
       const firstPath = (newFiles[0] as any).webkitRelativePath || "";
       const parts = firstPath.split("/").filter(Boolean);
-
       if (parts.length > 1) rootFolder = parts[0];
     }
 
@@ -413,7 +413,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   handleZipDownload: async (stageRef) => {
-    const { data, tool, view } = get();
+    const { data, tool, view, importedZipName } = get();
     if (!data || !stageRef) return;
 
     const originalView = view;
@@ -486,10 +486,18 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ zipProgress: meta.percent });
       const content = await zip.generateAsync({ type: "blob" }, onUpdate);
 
+      const rootFolder = getRootFolderNameFromData(data);
+      const zipName =
+        importedZipName && importedZipName.length > 0
+          ? `${importedZipName}_photos.zip`
+          : rootFolder
+          ? `${rootFolder}_photos.zip`
+          : "photos.zip";
+
       const url = URL.createObjectURL(content);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "photos.zip";
+      a.download = zipName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
