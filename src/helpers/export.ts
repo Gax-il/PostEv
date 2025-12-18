@@ -1,12 +1,12 @@
 import { Data } from "@/types";
 import JSZip from "jszip";
 
-const EXPORT_VERSION = "1.0.0";
+const EXPORT_VERSION = "1.1.0"; 
 
 export const exportPhotosWithJson = async (
   data: Data[],
   photoAngleValues: any[] = [],
-  zipName?: string // Optional zipName parameter
+  zipName?: string
 ) => {
   const zip = new JSZip();
 
@@ -27,8 +27,7 @@ export const exportPhotosWithJson = async (
       const match = fileName.match(/(.+)\.([^/.]+)$/);
       const baseName = match ? match[1] : fileName;
       let extension = match ? match[2] : "png";
-
-      if (extension === null) extension = "png";
+      if (!extension) extension = "png";
 
       const imageFilePath = folderPath
         ? `${folderPath}/${baseName}.${extension}`
@@ -37,22 +36,53 @@ export const exportPhotosWithJson = async (
         ? `${folderPath}/${baseName}.json`
         : `${baseName}.json`;
 
+      const image = await loadImageFromBlob(dataItem.file);
+      const width = image.width;
+      const height = image.height;
+
       const objectUrl = URL.createObjectURL(dataItem.file);
       const imageBlob = await fetch(objectUrl).then((r) => r.blob());
       URL.revokeObjectURL(objectUrl);
-
       zip.file(imageFilePath, imageBlob);
 
       const photoAngleValue = photoAngleValues[i] || { angles: [] };
+
+      const relativePoints =
+        dataItem.angle?.points?.map((p: any) =>
+          p.x != null && p.y != null
+            ? { ...p, x: p.x / width, y: p.y / height }
+            : { ...p }
+        ) || [];
+
+      const relativeAngleValues = (photoAngleValue.angles || []).map((a: any) => {
+        const value = a.value || {};
+        return {
+          ...a,
+          value:
+            value.x != null && value.y != null
+              ? {
+                  ...value,
+                  x: value.x / width,
+                  y: value.y / height,
+                }
+              : value,
+        };
+      });
+
+      const relativeAngle = dataItem.angle
+        ? { ...dataItem.angle, points: relativePoints }
+        : undefined;
+
       const jsonData = {
-        angle: dataItem.angle,
+        angle: relativeAngle,
         filename: dataItem.angle?.filename || dataItem.file.name,
         isFlipped: dataItem.isFlipped,
         usedAngle: dataItem.usedAngle,
         lastSelectedAngleTool: dataItem.lastSelectedAngleTool,
         originalPath: filePath,
-        angleValues: photoAngleValue.angles || [],
+        angleValues: relativeAngleValues,
       };
+
       zip.file(jsonFilePath, JSON.stringify(jsonData, null, 2));
     } catch (error) {
       console.error(`Error processing data item:`, error);
@@ -61,11 +91,28 @@ export const exportPhotosWithJson = async (
 
   const zipBlob = await zip.generateAsync({ type: "blob" });
   const zipUrl = URL.createObjectURL(zipBlob);
-  const zipLink = document.createElement("a");
-  zipLink.href = zipUrl;
-  zipLink.download = `${zipName || "exported_files"}.zip`; // Use zipName if provided
-  document.body.appendChild(zipLink);
-  zipLink.click();
-  document.body.removeChild(zipLink);
+
+  const link = document.createElement("a");
+  link.href = zipUrl;
+  link.download = `${zipName || "exported_files"}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
   URL.revokeObjectURL(zipUrl);
+};
+
+const loadImageFromBlob = (file: Blob): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
 };

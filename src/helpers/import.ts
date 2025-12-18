@@ -8,6 +8,17 @@ export const importPhotosWithJson = async (
   const newData: Data[] = [];
   const newPhotoAngleValues: PhotoAngleValues[] = [];
 
+  let version = "1.0.0";
+  if (zip.files["appinfo.json"]) {
+    try {
+      const infoContent = await zip.file("appinfo.json")!.async("text");
+      const info = JSON.parse(infoContent);
+      version = info.version || "1.0.0";
+    } catch (err) {
+      console.warn("Could not parse appinfo.json:", err);
+    }
+  }
+
   const jsonFiles = Object.keys(zip.files).filter(
     (filename) =>
       filename.endsWith(".json") && !filename.includes("appinfo.json")
@@ -20,7 +31,7 @@ export const importPhotosWithJson = async (
 
       const metadata = JSON.parse(jsonContent);
       const baseName = jsonPath.replace(/\.json$/i, "");
-      
+
       const extensions = ["png", "jpg", "jpeg", "webp"];
       let imageZipObject = null;
       let foundExt = "png";
@@ -37,11 +48,10 @@ export const importPhotosWithJson = async (
       if (!imageZipObject) continue;
 
       const blob = await imageZipObject.async("blob");
-      
       const reconstructedFile = new File(
-        [blob], 
-        metadata.filename || `${baseName.split('/').pop()}.${foundExt}`, 
-        { type: `image/${foundExt === 'jpg' ? 'jpeg' : foundExt}` }
+        [blob],
+        metadata.filename || `${baseName.split("/").pop()}.${foundExt}`,
+        { type: `image/${foundExt === "jpg" ? "jpeg" : foundExt}` }
       );
 
       if (metadata.originalPath) {
@@ -49,6 +59,60 @@ export const importPhotosWithJson = async (
           value: metadata.originalPath,
           writable: false,
         });
+      }
+
+      const versionNum = parseFloat(version);
+      let convertedAngles: any[] = [];
+
+      switch (true) {
+        // v1.0.0 
+        case versionNum < 1.1:
+          convertedAngles = metadata.angleValues || [];
+          break;
+
+        // v1.1.0 
+        case versionNum >= 1.1 && versionNum < 1.2: {
+          const img = await loadImageFromBlob(blob);
+          const width = img.width;
+          const height = img.height;
+
+          const scaledPoints = (metadata.angle?.points || []).map((p: any) =>
+            p.x != null && p.y != null
+              ? { ...p, x: p.x * width, y: p.y * height }
+              : { ...p }
+          );
+
+          if (metadata.angle) {
+            metadata.angle.points = scaledPoints;
+          }
+
+          convertedAngles = (metadata.angleValues || []).map((a: any) => {
+            const v = a.value || {};
+            return {
+              ...a,
+              value:
+                v.x != null && v.y != null
+                  ? {
+                      ...v,
+                      x: v.x * width,
+                      y: v.y * height,
+                    }
+                  : v,
+            };
+          });
+          break;
+        }
+
+        case versionNum >= 1.2:
+          console.warn(
+            `Importer: Unhandled version ${version}. Data may be incomplete.`
+          );
+          convertedAngles = metadata.angleValues || [];
+          break;
+
+        default:
+          convertedAngles = metadata.angleValues || [];
+          break;
       }
 
       newData.push({
@@ -61,7 +125,7 @@ export const importPhotosWithJson = async (
 
       newPhotoAngleValues.push({
         name: metadata.filename,
-        angles: metadata.angleValues || [],
+        angles: convertedAngles,
       });
     } catch (error) {
       console.error(error);
@@ -69,4 +133,20 @@ export const importPhotosWithJson = async (
   }
 
   return { data: newData, photoAngleValues: newPhotoAngleValues };
+};
+
+const loadImageFromBlob = (blob: Blob): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
 };

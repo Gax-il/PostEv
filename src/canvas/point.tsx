@@ -137,7 +137,7 @@ const Point = ({
       <Circle
         x={point.x}
         y={point.y}
-        radius={sizing.pointSize * 6}
+        radius={sizing.pointSize * 2}
         strokeWidth={1}
         opacity={0}
         onDragMove={handleDragMove}
