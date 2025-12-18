@@ -387,7 +387,6 @@ const Angle = ({
   }, [linePoints, stageScale]);
 
   const angleTexts = useMemo(() => {
-    // Text size should be inversely proportional to stage scale
     const baseFontSize = 20;
     const fontSize = baseFontSize / Math.max(stageScale, 0.001);
     const offset = fontSize * 0.5;

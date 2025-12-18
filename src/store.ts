@@ -46,9 +46,7 @@ interface AppState {
 }
 
 const initialTools = toolsData.map((tool) => {
-  if (tool.codeName === "flip") {
-    return { ...tool, disabled: true };
-  }
+  if (tool.codeName === "flip") return { ...tool, disabled: true };
 
   if (tool.children) {
     const newChildren = tool.children.map((childTool) => {
@@ -61,7 +59,6 @@ const initialTools = toolsData.map((tool) => {
         "downloadImages",
         "exportAngles",
       ];
-      
       if (toolsToDisable.includes(childTool.codeName)) {
         return { ...childTool, disabled: true };
       }
@@ -73,11 +70,18 @@ const initialTools = toolsData.map((tool) => {
   return tool;
 }) as Tool[];
 
+const getRootFolderNameFromData = (data: Data[]): string | null => {
+  if (!data || data.length === 0) return null;
+  const first = data[0];
+  const rel = first.file?.webkitRelativePath || "";
+  if (!rel) return null;
+  const parts = rel.split("/");
+  return parts.length > 1 ? parts[parts.length - 2] : null;
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   tool: "drag",
-  
   tools: initialTools,
-  
   toolbarHeight: 0,
   data: null,
   view: { tool: "drag", index: 0 },
@@ -86,6 +90,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   zipDownload: false,
   zipProgress: 0,
   lineColor: "#88fa2a",
+  importedZipName: undefined,
+
   setToolbarHeight: (height) => {
     if (get().toolbarHeight !== height) {
       set({ toolbarHeight: height });
@@ -95,16 +101,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   setView: (view) => set({ view }),
   setDownload: (value) => set({ download: value }),
   setLineColor: (color) => set({ lineColor: color }),
+
   changeTool: async (tool) => {
     const { data, view } = get();
+
     if (tool === "downloadImage") {
       set({ download: true });
       return;
     }
+
     if (tool === "downloadImages") {
       set({ tool: "downloadImages" });
       return;
     }
+
     if (tool === "next" || tool === "previous") {
       if (!data) return;
       const curIndex = view.index;
@@ -121,19 +131,33 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       set({ view: { tool, index: newIndex } });
       get().handleDisableFilesTools(newIndex);
-    } else if (tool === "export") {
+      return;
+    }
+
+    if (tool === "export") {
       const { data, photoAngleValues, importedZipName } = get();
-      if (data === null) return;
-      await exportPhotosWithJson(
-        data,
-        photoAngleValues,
-        importedZipName || "exported_files"
-      );
-    } else if (tool === "exportAngles") {
+      if (!data) return;
+
+      const exportName =
+        importedZipName && importedZipName.length > 0
+          ? importedZipName + "_new"
+          : getRootFolderNameFromData(data) || "exported_files";
+
+      await exportPhotosWithJson(data, photoAngleValues, exportName);
+      return;
+    }
+
+    if (tool === "exportAngles") {
       get().exportAnglesToCSV();
-    } else if (tool === "import") {
+      return;
+    }
+
+    if (tool === "import") {
       document.getElementById("import-input")?.click();
-    } else if (tool === "removeFiles") {
+      return;
+    }
+
+    if (tool === "removeFiles") {
       const state = get();
       if (!state.data || state.data.length === 0) return;
       set({
@@ -142,49 +166,54 @@ export const useAppStore = create<AppState>((set, get) => ({
         tool: "drag",
       });
       get().handleDisableFilesTools(0);
-    } else if (tool === "flip") {
+      return;
+    }
+
+    if (tool === "flip") {
       const { data, view } = get();
-      if (!Array.isArray(data) || !data) return;
+      if (!data) return;
       const newData = [...data];
       newData[view.index].isFlipped = !data[view.index].isFlipped;
       set({ data: newData });
-    } else {
-      const { tools } = get();
-      const toolFound = tools.find((t) => t.codeName === tool);
-      if (!toolFound) {
-        tools.forEach((t) => {
-          if (t.children) {
-            t.children.forEach((childTool) => {
-              if (childTool.codeName === tool) {
-                set({ tool: childTool.codeName });
-                if (childTool.angle) {
-                  const { data, view } = get();
-                  if (!Array.isArray(data) || !data) return;
-                  const newData = [...data];
-                  newData[view.index].lastSelectedAngleTool =
-                    childTool.codeName;
-                  newData[view.index].usedAngle[
-                    childTool.codeName as keyof UsedAngle
-                  ] = true;
-                  set({ data: newData });
-                }
+      return;
+    }
+
+    const { tools } = get();
+    const toolFound = tools.find((t) => t.codeName === tool);
+
+    if (!toolFound) {
+      tools.forEach((t) => {
+        if (t.children) {
+          t.children.forEach((childTool) => {
+            if (childTool.codeName === tool) {
+              set({ tool: childTool.codeName });
+              if (childTool.angle) {
+                const { data, view } = get();
+                if (!data) return;
+                const newData = [...data];
+                newData[view.index].lastSelectedAngleTool = childTool.codeName;
+                newData[view.index].usedAngle[
+                  childTool.codeName as keyof UsedAngle
+                ] = true;
+                set({ data: newData });
               }
-            });
-          }
-        });
-      } else {
-        if (toolFound.angle) {
-          const { data, view } = get();
-          if (!Array.isArray(data) || !data) return;
-          const newData = [...data];
-          newData[view.index].lastSelectedAngleTool = tool;
-          newData[view.index].usedAngle[tool as keyof UsedAngle] = true;
-          set({ data: newData });
+            }
+          });
         }
-        set({ tool });
+      });
+    } else {
+      if (toolFound.angle) {
+        const { data, view } = get();
+        if (!data) return;
+        const newData = [...data];
+        newData[view.index].lastSelectedAngleTool = tool;
+        newData[view.index].usedAngle[tool as keyof UsedAngle] = true;
+        set({ data: newData });
       }
+      set({ tool });
     }
   },
+
   handleDisableFilesTools: (index) => {
     const { tools, data, photoAngleValues } = get();
     const noData = !data || data.length === 0;
@@ -198,10 +227,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         const newChildren = tool.children.map((childTool) => {
           switch (childTool.codeName) {
             case "previous":
-              return {
-                ...childTool,
-                disabled: noData || index === 0,
-              };
+              return { ...childTool, disabled: noData || index === 0 };
             case "next":
               return {
                 ...childTool,
@@ -211,15 +237,9 @@ export const useAppStore = create<AppState>((set, get) => ({
             case "export":
             case "downloadImage":
             case "downloadImages":
-              return {
-                ...childTool,
-                disabled: noData,
-              };
+              return { ...childTool, disabled: noData };
             case "import":
-              return {
-                ...childTool,
-                disabled: false,
-              };
+              return { ...childTool, disabled: false };
             case "exportAngles":
               return {
                 ...childTool,
@@ -231,15 +251,28 @@ export const useAppStore = create<AppState>((set, get) => ({
         });
         return { ...tool, children: newChildren };
       }
+
       return tool;
     }) as Tool[];
     set({ tools: newTools });
   },
+
   setFiles: (newFiles) => {
     const state = get();
     if (state.data !== null) return;
+
     const newData: Data[] = [];
     const newPhotoAngleValues: PhotoAngleValues[] = [];
+
+    let rootFolder = "";
+
+    if (newFiles.length > 0 && "webkitRelativePath" in newFiles[0]) {
+      const firstPath = (newFiles[0] as any).webkitRelativePath || "";
+      const parts = firstPath.split("/").filter(Boolean);
+
+      if (parts.length > 1) rootFolder = parts[0];
+    }
+
     for (const file of newFiles) {
       newData.push({
         file,
@@ -248,119 +281,78 @@ export const useAppStore = create<AppState>((set, get) => ({
           filename: file.name,
         },
         isFlipped: false,
-        usedAngle: {
-          totalCC: false,
-          pisa: false,
-          back: false,
-          upperCC: false,
-        },
+        usedAngle: { totalCC: false, pisa: false, back: false, upperCC: false },
         lastSelectedAngleTool: null,
       });
-      newPhotoAngleValues.push({
-        name: file.name,
-        angles: [],
-      });
+      newPhotoAngleValues.push({ name: file.name, angles: [] });
     }
+
     set({
       photoAngleValues: newPhotoAngleValues,
       data: newData,
       view: { tool: "drag", index: 0 },
+      importedZipName: rootFolder || undefined,
     });
     get().handleDisableFilesTools(0);
   },
+
   setPoints: (points) => {
     const { data, view } = get();
-    if (
-      !points ||
-      !data ||
-      !data[view.index] ||
-      !Array.isArray(points) ||
-      points.length === 0
-    )
-      return;
+    if (!points || !data || !data[view.index]) return;
+
     const currentData = data[view.index];
     if (!currentData.angle || !currentData.angle.points) return;
-    let hasChanges = false;
+
     const currentPoints = currentData.angle.points;
-    for (const newPointWithIndex of points) {
-      const pointIndex = newPointWithIndex.index;
-      const newPoint = newPointWithIndex.point;
-      if (
-        pointIndex < 0 ||
-        pointIndex >= currentPoints.length ||
-        !currentPoints[pointIndex]
-      )
-        continue;
-      const currentPoint = currentPoints[pointIndex];
-      if (
-        typeof currentPoint.x !== "number" ||
-        typeof currentPoint.y !== "number" ||
-        typeof newPoint.x !== "number" ||
-        typeof newPoint.y !== "number"
-      ) {
-        if (currentPoint.x === null || currentPoint.y === null) {
-          hasChanges = true;
-          break;
-        }
-        continue;
-      }
-      if (
-        Math.abs(currentPoint.x - newPoint.x) > 0.001 ||
-        Math.abs(currentPoint.y - newPoint.y) > 0.001
-      ) {
-        hasChanges = true;
-        break;
-      }
-    }
-    if (!hasChanges) return;
     const newPoints = [...currentPoints];
-    for (const pwi of points) {
-      const idx = pwi.index;
-      const pt = pwi.point;
-      if (idx >= 0 && idx < newPoints.length) {
-        if (typeof pt.x === "number" && typeof pt.y === "number") {
-          newPoints[idx] = { ...newPoints[idx], x: pt.x, y: pt.y };
-        }
+    for (const { point, index } of points) {
+      if (
+        index >= 0 &&
+        index < newPoints.length &&
+        typeof point.x === "number" &&
+        typeof point.y === "number"
+      ) {
+        newPoints[index] = { ...newPoints[index], x: point.x, y: point.y };
       }
     }
+
     const newAngle = { ...currentData.angle, points: newPoints } as Angles;
-    const newDataArr = [...data];
-    newDataArr[view.index] = { ...newDataArr[view.index], angle: newAngle };
-    set({ data: newDataArr });
+    const newData = [...data];
+    newData[view.index] = { ...newData[view.index], angle: newAngle };
+    set({ data: newData });
   },
+
   handlePhotoAngleValues: (calculateAngle, index) => {
     const { photoAngleValues, data, view } = get();
-    const viewIndex = index !== undefined ? index : view.index;
-    if (!data || viewIndex === null || viewIndex >= data.length) return;
+    const viewIndex = index ?? view.index;
+    if (!data || viewIndex >= data.length) return;
+
     const angleTool = data[viewIndex].lastSelectedAngleTool;
     if (!angleTool) return;
+
     const newPhotoAngleValues = [...photoAngleValues];
     if (!newPhotoAngleValues[viewIndex]) return;
+
     const updatedAngles = newPhotoAngleValues[viewIndex].angles.filter(
       (angle) => angle.type !== angleTool
     );
-    if (
-      angleTool === "totalCC" ||
-      angleTool === "pisa" ||
-      angleTool === "back" ||
-      angleTool === "upperCC"
-    ) {
+
+    if (["totalCC", "pisa", "back", "upperCC"].includes(angleTool)) {
       updatedAngles.push({
-        type: angleTool,
+        type: angleTool as "totalCC" | "pisa" | "back" | "upperCC",
         value: calculateAngle,
       });
     }
+
     newPhotoAngleValues[viewIndex].angles = updatedAngles;
     set({ photoAngleValues: newPhotoAngleValues });
   },
+
   exportAnglesToCSV: async () => {
     const { data, photoAngleValues } = get();
-    if (!data || !photoAngleValues || photoAngleValues.length === 0) {
-      return;
-    }
+    if (!data || !photoAngleValues || photoAngleValues.length === 0) return;
 
-    let csvContent = "Photo Name,Angle Name,Angle Value,Width,Height\n";
-
+    let csvContent = "Photo Name,Angle Name,Angle Value\n";
     for (let idx = 0; idx < photoAngleValues.length; idx++) {
       const photo = photoAngleValues[idx];
       const fileData = data[idx];
@@ -368,15 +360,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       img.src = URL.createObjectURL(fileData.file);
       await new Promise((resolve) => (img.onload = resolve));
 
-      const width = img.width;
-      const height = img.height;
-
       if (photo.angles.length > 0) {
         photo.angles.forEach((angle) => {
-          const photoName = fileData?.file.name || "Unknown";
+          const photoName = fileData.file.name;
           const angleName = angle.type;
           const angleValue = angle.value.angle.toFixed(2);
-          csvContent += `${photoName},${angleName},${angleValue},${width},${height}\n`;
+          csvContent += `${photoName},${angleName},${angleValue}\n`;
         });
       }
 
@@ -386,57 +375,65 @@ export const useAppStore = create<AppState>((set, get) => ({
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "angle_values.csv");
+    link.href = url;
+    link.download = "angle_values.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   },
+
   handleZipImport: async (file) => {
-    const isZip = 
-      file.type === "application/zip" || 
-      file.type === "application/x-zip-compressed" || 
+    const isZip =
+      file.type === "application/zip" ||
+      file.type === "application/x-zip-compressed" ||
       file.name.toLowerCase().endsWith(".zip");
 
-    if (file && isZip) {
-      try {
-        const { data: newData, photoAngleValues: importedAngleValues } =
-          await importPhotosWithJson(file);
-        
-        const importedZipName = file.name.replace(/\.zip$/i, '');
-        
-        set({
-          data: newData,
-          view: { tool: "drag", index: 0 },
-          photoAngleValues: importedAngleValues,
-          importedZipName: importedZipName,
-        });
-        get().handleDisableFilesTools(0);
-      } catch (e) {
-        console.error("Import failed", e);
-      }
-    } else {
+    if (!isZip) {
       console.error("Invalid file type. Please upload a zip file.");
+      return;
+    }
+
+    try {
+      const { data: newData, photoAngleValues: importedAngleValues } =
+        await importPhotosWithJson(file);
+
+      const importedZipName = file.name.replace(/\.zip$/i, "");
+
+      set({
+        data: newData,
+        view: { tool: "drag", index: 0 },
+        photoAngleValues: importedAngleValues,
+        importedZipName,
+      });
+      get().handleDisableFilesTools(0);
+    } catch (e) {
+      console.error("Import failed", e);
     }
   },
+
   handleZipDownload: async (stageRef) => {
     const { data, tool, view } = get();
     if (!data || !stageRef) return;
+
     const originalView = view;
     const originalTool = tool;
     set({ zipDownload: true, zipProgress: 0 });
+
     const zip = new JSZip();
     let totalFiles = 0;
-    data.forEach((photo) => {
+
+    data.forEach((photo) =>
       Object.values(photo.usedAngle).forEach((used) => {
         if (used) totalFiles++;
-      });
-    });
+      })
+    );
+
     let currentFile = 0;
     const currentScale = stageRef.scale();
     const currentPosition = stageRef.position();
     const currentSize = stageRef.size();
+
     try {
       for (let photoIndex = 0; photoIndex < data.length; photoIndex++) {
         const photo = data[photoIndex];
@@ -447,6 +444,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         const anglesUsed = Object.keys(photo.usedAngle).filter(
           (key) => photo.usedAngle[key as keyof UsedAngle]
         );
+
         for (const angleName of anglesUsed) {
           set({
             view: { tool: angleName, index: photoIndex },
@@ -456,37 +454,38 @@ export const useAppStore = create<AppState>((set, get) => ({
           newDataArr[photoIndex].lastSelectedAngleTool = angleName;
           set({ data: newDataArr });
           await new Promise((r) => setTimeout(r, 300));
+
           const img = new Image();
           img.src = URL.createObjectURL(photo.file);
           await new Promise((r) => (img.onload = () => r(null)));
+
           if (
             stageRef.size().width !== img.width ||
             stageRef.size().height !== img.height
-          ) {
+          )
             stageRef.size({ width: img.width, height: img.height });
-          }
-          if (stageRef.scale().x !== 1 || stageRef.scale().y !== 1) {
+
+          if (stageRef.scale().x !== 1 || stageRef.scale().y !== 1)
             stageRef.scale({ x: 1, y: 1 });
-          }
-          if (stageRef.position().x !== 0 || stageRef.position().y !== 0) {
+
+          if (stageRef.position().x !== 0 || stageRef.position().y !== 0)
             stageRef.position({ x: 0, y: 0 });
-          }
-          const dataUrl = stageRef.toDataURL({
-            pixelRatio: 2,
-            mimeType,
-          });
+
+          const dataUrl = stageRef.toDataURL({ pixelRatio: 2, mimeType });
           const resp = await fetch(dataUrl);
           const blob = await resp.blob();
           const filename = `${baseName}_${angleName}.${extension}`;
           zip.file(filename, blob);
+
           currentFile++;
           set({ zipProgress: (currentFile / totalFiles) * 100 });
         }
       }
-      const onUpdate: OnUpdateCallback = (meta) => {
+
+      const onUpdate: OnUpdateCallback = (meta) =>
         set({ zipProgress: meta.percent });
-      };
       const content = await zip.generateAsync({ type: "blob" }, onUpdate);
+
       const url = URL.createObjectURL(content);
       const a = document.createElement("a");
       a.href = url;
@@ -495,7 +494,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
     } finally {
       set({
         view: originalView,
