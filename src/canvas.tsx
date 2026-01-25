@@ -150,7 +150,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
     setTimeout(() => {
       const uri = stageRef.current.toDataURL({
-        pixelRatio: 3,
+        pixelRatio: 1,
         mimeType,
       });
 

@@ -471,7 +471,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           if (stageRef.position().x !== 0 || stageRef.position().y !== 0)
             stageRef.position({ x: 0, y: 0 });
 
-          const dataUrl = stageRef.toDataURL({ pixelRatio: 2, mimeType });
+          const dataUrl = stageRef.toDataURL({ pixelRatio: 1, mimeType });
           const resp = await fetch(dataUrl);
           const blob = await resp.blob();
           const filename = `${baseName}_${angleName}.${extension}`;
