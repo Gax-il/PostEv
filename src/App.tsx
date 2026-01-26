@@ -5,12 +5,15 @@ import Canvas from "./canvas";
 import NoFiles from "./components/no_files";
 import { Angles, CalculatedAngle, Point } from "./types";
 import { useAppStore } from "./store";
+import { Toaster } from "./components/ui/toaster";
+import { useToast } from "./hooks/use-toast";
 
 function App() {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const disableToolsInitializedRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   const {
     tool,
@@ -89,8 +92,17 @@ function App() {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      await handleZipImport(file);
+      try {
+        await handleZipImport(file);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Import failed",
+          description: error instanceof Error ? error.message : "An unknown error occurred while importing the file.",
+        });
+      }
     }
+    event.target.value = "";
   };
 
   const getCurrentAngle = (): Angles | null => {
@@ -181,6 +193,7 @@ function App() {
           </div>
         </div>
       )}
+      <Toaster />
     </div>
   );
 }
