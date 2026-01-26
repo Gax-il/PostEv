@@ -5,6 +5,21 @@ export const importPhotosWithJson = async (
   file: File
 ): Promise<{ data: Data[]; photoAngleValues: PhotoAngleValues[] }> => {
   const zip = await JSZip.loadAsync(file);
+  
+  const allFiles = Object.keys(zip.files);
+  if (allFiles.length === 0) {
+    throw new Error("The zip file is empty. Please upload a valid exported file.");
+  }
+
+  const jsonFiles = allFiles.filter(
+    (filename) =>
+      filename.endsWith(".json") && !filename.includes("appinfo.json")
+  );
+
+  if (jsonFiles.length === 0) {
+    throw new Error("Invalid zip file format. No photo metadata found. Please upload a file exported from this application.");
+  }
+
   const newData: Data[] = [];
   const newPhotoAngleValues: PhotoAngleValues[] = [];
 
@@ -18,11 +33,6 @@ export const importPhotosWithJson = async (
       console.warn("Could not parse appinfo.json:", err);
     }
   }
-
-  const jsonFiles = Object.keys(zip.files).filter(
-    (filename) =>
-      filename.endsWith(".json") && !filename.includes("appinfo.json")
-  );
 
   for (const jsonPath of jsonFiles) {
     try {
@@ -128,8 +138,12 @@ export const importPhotosWithJson = async (
         angles: convertedAngles,
       });
     } catch (error) {
-      console.error(error);
+      console.error("Error processing file:", error);
     }
+  }
+
+  if (newData.length === 0) {
+    throw new Error("No valid photos found in the zip file. The file may have an incorrect format or missing images.");
   }
 
   return { data: newData, photoAngleValues: newPhotoAngleValues };

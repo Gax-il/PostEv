@@ -390,8 +390,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       file.name.toLowerCase().endsWith(".zip");
 
     if (!isZip) {
-      console.error("Invalid file type. Please upload a zip file.");
-      return;
+      throw new Error("Invalid file type. Please upload a zip file.");
     }
 
     try {
@@ -408,7 +407,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       get().handleDisableFilesTools(0);
     } catch (e) {
-      console.error("Import failed", e);
+      throw e;
     }
   },
 
