@@ -62,8 +62,9 @@ const tools: Tool[] = [
     children: [
       {
         angle: true,
-        name: "Trunk lateral flexion",
+        name: "Pisa",
         codeName: "pisa",
+        tooltip: "Trunk lateral flexion",
       },
     ],
     groupToggle: true,
@@ -75,12 +76,14 @@ const tools: Tool[] = [
     children: [
       {
         angle: true,
-        name: "Total trunk anteflexion",
+        name: "TotalCC",
+        tooltip: "Total trunk anteflexion",
         codeName: "totalCC",
       },
       {
         angle: true,
-        name: "Upper trunk anteflexion",
+        name: "UpperCC",
+        tooltip: "Upper trunk anteflexion",
         codeName: "upperCC",
       },
     ],
@@ -93,7 +96,8 @@ const tools: Tool[] = [
     children: [
       {
         angle: true,
-        name: "Posterior trunk lateral flexion",
+        name: "Back",
+        tooltip: "Posterior trunk lateral flexion",
         codeName: "back",
       },
     ],
