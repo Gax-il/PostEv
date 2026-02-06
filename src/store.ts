@@ -437,6 +437,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       for (let photoIndex = 0; photoIndex < data.length; photoIndex++) {
         const photo = data[photoIndex];
         if (!photo) continue;
+        
+        const originalLastSelectedAngleTool = photo.lastSelectedAngleTool;
+        
         const mimeType = photo.file.type || "image/png";
         const extension = mimeType.split("/")[1] || "png";
         const baseName = photo.file.name.split(".").slice(0, -1).join(".");
@@ -449,14 +452,18 @@ export const useAppStore = create<AppState>((set, get) => ({
             view: { tool: angleName, index: photoIndex },
             tool: angleName,
           });
+          
           const newDataArr = [...data];
           newDataArr[photoIndex].lastSelectedAngleTool = angleName;
           set({ data: newDataArr });
-          await new Promise((r) => setTimeout(r, 300));
+          
+          await new Promise((r) => setTimeout(r, 100));
 
           const img = new Image();
           img.src = URL.createObjectURL(photo.file);
           await new Promise((r) => (img.onload = () => r(null)));
+          
+          await new Promise((r) => setTimeout(r, 400));
 
           if (
             stageRef.size().width !== img.width ||
@@ -479,6 +486,10 @@ export const useAppStore = create<AppState>((set, get) => ({
           currentFile++;
           set({ zipProgress: (currentFile / totalFiles) * 100 });
         }
+        
+        const restoreDataArr = [...get().data!];
+        restoreDataArr[photoIndex].lastSelectedAngleTool = originalLastSelectedAngleTool;
+        set({ data: restoreDataArr });
       }
 
       const onUpdate: OnUpdateCallback = (meta) =>
